@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SIPANTREN V3 - At-Taufiiqiyyah</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap');
+        body { font-family: 'DM Sans', sans-serif; background-color: #f3f4f6; }
+        .hidden-section { display: none !important; }
+        
+        /* Animasi Jam */
+        .clock-container {
+            background: linear-gradient(135deg, #064e3b 0%, #10b981 100%);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+            text-align: right;
+        }
+
+        /* A4 Paper Style */
+        .a4-paper {
+            width: 210mm;
+            min-height: 297mm;
+            padding: 15mm;
+            background: white;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            margin: 0 auto;
+            position: relative; 
+        }
+        @media (max-width: 768px) {
+            .a4-paper { transform: scale(0.5); transform-origin: top center; margin-bottom: -140mm; }
+        }
+    </style>
+</head>
+<body class="h-screen flex flex-col overflow-hidden text-gray-800">
+
+    <section id="login-page" class="absolute inset-0 z-50 flex items-center justify-center bg-green-900">
+        <div class="bg-white p-8 rounded-2xl shadow-2xl w-96 text-center">
+            <div class="flex justify-center gap-4 mb-4">
+                <img src="logo1.png" class="h-12" onerror="this.style.display='none'">
+                <img src="logo2.png" class="h-12" onerror="this.src='https://cdn-icons-png.flaticon.com/512/2883/2883833.png'">
+            </div>
+            <h2 class="text-xl font-bold text-green-800 mb-1">SIPANTREN V3</h2>
+            <p class="text-xs text-gray-500 mb-6">PP At-Taufiiqiyyah x Universitas Terbuka</p>
+            
+            <form onsubmit="handleLogin(event)" class="text-left space-y-4">
+                <div>
+                    <label class="text-xs font-bold uppercase text-gray-600">Username</label>
+                    <input type="text" id="login-user" class="w-full border p-2 rounded focus:ring-2 focus:ring-green-500 outline-none" placeholder="Masukan Username" required>
+                </div>
+                <div class="relative">
+                    <label class="text-xs font-bold uppercase text-gray-600">Password</label>
+                    <input type="password" id="login-pass" class="w-full border p-2 rounded focus:ring-2 focus:ring-green-500 outline-none" placeholder="Masukan Password" required>
+                </div>
+                <button type="submit" class="w-full bg-green-700 text-white py-2 rounded-lg font-bold hover:bg-green-800 transition">MASUK</button>
+                <div class="text-center">
+                    <button type="button" onclick="forgotPassword()" class="text-xs text-green-600 hover:underline">Lupa Kata Sandi?</button>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <div id="main-app" class="hidden-section flex flex-1 h-screen">
+        
+        <aside class="w-64 bg-white border-r flex flex-col hidden md:flex">
+            <div class="p-6 border-b flex items-center gap-3">
+                <img src="logo2.png" class="h-10" onerror="this.src='https://cdn-icons-png.flaticon.com/512/2883/2883833.png'">
+                <div>
+                    <h1 class="font-bold text-green-800 leading-none">SIPANTREN</h1>
+                    <span class="text-[10px] text-gray-500">Keuangan & Akademik</span>
+                </div>
+            </div>
+            <nav class="flex-1 p-4 space-y-2 overflow-y-auto">
+                <button onclick="nav('dashboard')" class="w-full text-left px-4 py-3 rounded hover:bg-green-50 text-gray-700 font-medium text-sm flex gap-3 items-center"><i class="fa-solid fa-gauge w-5 text-center"></i> Dashboard</button>
+                <button onclick="nav('mahasiswa')" class="w-full text-left px-4 py-3 rounded hover:bg-green-50 text-gray-700 font-medium text-sm flex gap-3 items-center"><i class="fa-solid fa-users w-5 text-center"></i> Data Mahasiswa</button>
+                <button onclick="nav('pembayaran')" class="w-full text-left px-4 py-3 rounded hover:bg-green-50 text-gray-700 font-medium text-sm flex gap-3 items-center"><i class="fa-solid fa-wallet w-5 text-center"></i> Kasir Pembayaran</button>
+                <button onclick="nav('laporan')" class="w-full text-left px-4 py-3 rounded hover:bg-green-50 text-gray-700 font-medium text-sm flex gap-3 items-center"><i class="fa-solid fa-print w-5 text-center"></i> Kartu & Laporan</button>
+                <button onclick="nav('setting')" class="w-full text-left px-4 py-3 rounded hover:bg-green-50 text-gray-700 font-medium text-sm flex gap-3 items-center"><i class="fa-solid fa-gears w-5 text-center"></i> Pengaturan</button>
+            </nav>
+            <div class="p-4 border-t bg-gray-50">
+                <button onclick="logout()" class="w-full bg-white border border-red-200 text-red-600 py-2 rounded text-sm font-bold hover:bg-red-50"><i class="fa-solid fa-power-off"></i> Keluar</button>
+            </div>
+        </aside>
+
+        <main class="flex-1 flex flex-col bg-gray-50 overflow-hidden">
+            <header class="h-20 bg-white border-b flex items-center justify-between px-8 shadow-sm shrink-0 z-20">
+                <div>
+                    <h2 id="page-title" class="text-xl font-bold text-gray-800">Dashboard</h2>
+                    <p id="header-greeting" class="text-sm text-green-600">Selamat Datang...</p>
+                </div>
+                <div class="clock-container">
+                    <div id="clock-time" class="text-2xl font-bold font-mono leading-none">00:00:00</div>
+                    <div id="clock-date" class="text-xs opacity-90 mt-1">Senin, 1 Jan 2024</div>
+                </div>
+            </header>
+
+            <div class="flex-1 overflow-y-auto p-8">
+                
+                <section id="view-dashboard" class="space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-green-600">
+                            <p class="text-gray-500 text-sm mb-1">Total Mahasiswa Aktif</p>
+                            <h3 id="dash-mhs" class="text-3xl font-bold text-gray-800">0</h3>
+                        </div>
+                        <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-blue-600">
+                            <p class="text-gray-500 text-sm mb-1">Kas Masuk Hari Ini</p>
+                            <h3 id="dash-income" class="text-3xl font-bold text-gray-800">Rp 0</h3>
+                        </div>
+                        <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-red-600">
+                            <p class="text-gray-500 text-sm mb-1">Mahasiswa Menunggak</p>
+                            <h3 id="dash-debt" class="text-3xl font-bold text-red-600">0</h3>
+                            <p class="text-xs text-gray-400">Belum lunas semester ini</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-indigo-900 text-white rounded-xl p-8 relative overflow-hidden">
+                        <div class="relative z-10">
+                            <h3 class="text-2xl font-bold mb-2">Periode Akademik Berjalan</h3>
+                            <p class="opacity-90 max-w-2xl text-lg" id="dash-semester-info">Memuat data semester...</p>
+                        </div>
+                        <i class="fa-solid fa-graduation-cap absolute -right-6 -bottom-6 text-9xl opacity-10"></i>
+                    </div>
+                </section>
+
+                <section id="view-mahasiswa" class="hidden-section space-y-6">
+                    <div class="flex justify-between items-center bg-white p-4 rounded-lg shadow-sm">
+                        <div class="flex gap-2">
+                            <button onclick="setMhsView('active')" id="btn-view-active" class="px-4 py-2 rounded bg-green-600 text-white font-bold text-sm">Data Aktif</button>
+                            <button onclick="setMhsView('archive')" id="btn-view-archive" class="px-4 py-2 rounded bg-gray-200 text-gray-600 font-bold text-sm">Arsip / Alumni</button>
+                        </div>
+                        <button onclick="toggleModal('modal-mhs')" class="bg-blue-600 text-white px-4 py-2 rounded font-bold text-sm flex items-center gap-2"><i class="fa-solid fa-plus"></i> Input Baru</button>
+                    </div>
+
+                    <div class="bg-white rounded-lg shadow-sm border overflow-hidden">
+                        <table class="w-full text-left text-sm">
+                            <thead class="bg-gray-100 text-gray-600 font-bold uppercase">
+                                <tr>
+                                    <th class="p-4">NIM</th>
+                                    <th class="p-4">Nama Lengkap</th>
+                                    <th class="p-4">Info Akademik</th>
+                                    <th class="p-4">Masuk Periode</th>
+                                    <th class="p-4">Smt Saat Ini</th>
+                                    <th class="p-4 text-center">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-mhs-body" class="divide-y divide-gray-100"></tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section id="view-pembayaran" class="hidden-section grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="bg-white p-6 rounded-xl shadow-lg border border-green-100 h-fit sticky top-4">
+                        <h3 class="font-bold text-lg mb-4 flex items-center gap-2"><i class="fa-solid fa-cash-register text-green-600"></i> Kasir Pembayaran</h3>
+                        
+                        <form onsubmit="processPayment(event)" class="space-y-4">
+                            <div>
+                                <label class="text-xs font-bold text-gray-500 uppercase">Cari Mahasiswa</label>
+                                <input list="list-mhs" id="pay-nim" class="w-full border p-2 rounded bg-gray-50" placeholder="Ketik Nama/NIM..." onchange="checkArrears()" required>
+                                <datalist id="list-mhs"></datalist>
+                            </div>
+
+                            <div>
+                                <label class="text-xs font-bold text-gray-500 uppercase">Tanggal Bayar</label>
+                                <input type="date" id="pay-date" class="w-full border p-2 rounded" required>
+                            </div>
+
+                            <div>
+                                <label class="text-xs font-bold text-gray-500 uppercase">Jenis Pembayaran</label>
+                                <select id="pay-type" class="w-full border p-2 rounded bg-white" onchange="handlePayTypeChange()" required>
+                                    <option value="">-- Pilih --</option>
+                                    <option value="Tunggakan">Bayar Tunggakan (Cek Otomatis)</option>
+                                    <option value="UKT">UKT Semester (Manual)</option>
+                                    <option value="Heregistrasi">Heregistrasi (Manual)</option>
+                                    <option value="Modul">Pembelian Modul</option>
+                                    <option value="Lainnya">Lainnya</option>
+                                </select>
+                            </div>
+
+                            <div id="debt-options-area" class="hidden bg-red-50 p-3 rounded border border-red-100">
+                                <p class="text-xs font-bold text-red-700 mb-2">Pilih Tunggakan yg mau dibayar:</p>
+                                <div id="debt-list" class="space-y-2 max-h-40 overflow-y-auto text-xs"></div>
+                            </div>
+
+                            <div>
+                                <label class="text-xs font-bold text-gray-500 uppercase">Keterangan / Semester</label>
+                                <input type="text" id="pay-desc" class="w-full border p-2 rounded" placeholder="Contoh: Semester 3">
+                            </div>
+
+                            <div>
+                                <label class="text-xs font-bold text-gray-500 uppercase">Nominal (Rp)</label>
+                                <input type="number" id="pay-amount" class="w-full border p-2 rounded font-mono font-bold text-lg text-green-700 bg-gray-100">
+                            </div>
+
+                            <button type="submit" class="w-full bg-green-600 text-white py-3 rounded-lg font-bold hover:bg-green-700 shadow-lg">PROSES BAYAR</button>
+                        </form>
+                    </div>
+
+                    <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm border">
+                        <h3 class="font-bold text-gray-700 mb-4">Riwayat Transaksi Terakhir</h3>
+                        <div class="overflow-auto max-h-[600px]">
+                            <table class="w-full text-sm text-left">
+                                <thead class="bg-gray-50 sticky top-0">
+                                    <tr>
+                                        <th class="p-3">Tanggal</th>
+                                        <th class="p-3">Mahasiswa</th>
+                                        <th class="p-3">Keterangan</th>
+                                        <th class="p-3 text-right">Nominal</th>
+                                        <th class="p-3 text-center">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="history-body"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="view-laporan" class="hidden-section space-y-6">
+                    <div class="bg-white p-4 rounded-lg shadow-sm flex gap-4">
+                        <input list="list-mhs" id="report-nim" class="border p-2 rounded w-64" placeholder="Cari Mahasiswa..." onchange="renderCard()">
+                        <button onclick="downloadPDF()" class="bg-red-600 text-white px-4 rounded font-bold"><i class="fa-solid fa-file-pdf"></i> Unduh PDF</button>
+                    </div>
+
+                    <div class="overflow-auto bg-gray-200 p-8 rounded border">
+                        <div id="card-preview" class="a4-paper hidden">
+                            <div class="flex items-center gap-4 border-b-4 border-green-700 pb-4 mb-6">
+                                <img src="logo2.png" class="h-20" onerror="this.src='https://via.placeholder.com/80?text=LOGO+PP'">
+                                <div class="flex-1 text-center">
+                                    <h1 class="text-2xl font-bold text-green-900 uppercase">PONDOK PESANTREN AT-TAUFIIQIYYAH</h1>
+                                    <h2 class="text-lg font-semibold text-gray-600">UNIT KERJASAMA UNIVERSITAS TERBUKA (UT)</h2>
+                                    <p class="text-xs text-gray-500 mt-1">Laporan Status Keuangan & Kartu Studi Mahasiswa</p>
+                                </div>
+                                <img src="logo1.png" class="h-16" onerror="this.src='https://via.placeholder.com/80?text=LOGO+UT'">
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-x-8 gap-y-2 mb-6 text-sm">
+                                <div class="flex"><span class="w-32 font-bold">NAMA</span> <span id="c-nama">: -</span></div>
+                                <div class="flex"><span class="w-32 font-bold">NIM</span> <span id="c-nim">: -</span></div>
+                                <div class="flex"><span class="w-32 font-bold">FAKULTAS/PRODI</span> <span id="c-prodi">: -</span></div>
+                                <div class="flex"><span class="w-32 font-bold">SEMESTER</span> <span id="c-smt">: -</span></div>
+                            </div>
+
+                            <h3 class="font-bold border-b border-gray-300 mb-2">STATUS KEWAJIBAN ADMINISTRASI</h3>
+                            <table class="w-full text-sm border-collapse border border-gray-300 mb-6">
+                                <thead class="bg-gray-100">
+                                    <tr>
+                                        <th class="border p-2 text-left">Item Pembayaran</th>
+                                        <th class="border p-2 text-center">Status</th>
+                                        <th class="border p-2 text-right">Tunggakan</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="c-tbody-arrears"></tbody>
+                                <tfoot class="bg-gray-50 font-bold">
+                                    <tr>
+                                        <td colspan="2" class="border p-2 text-right">TOTAL TUNGGAKAN</td>
+                                        <td class="border p-2 text-right text-red-600" id="c-total">Rp 0</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+
+                            <div class="absolute bottom-12 left-12 right-12">
+                                <div class="flex justify-between text-center text-sm">
+                                    <div>
+                                        <p class="mb-16">Mahasiswa Ybs,</p>
+                                        <p class="font-bold underline" id="c-footer-mhs">Nama Mahasiswa</p>
+                                    </div>
+                                    <div>
+                                        <p class="mb-16"><span id="c-city">Cianjur</span>, <span id="c-date"></span><br>Admin Keuangan</p>
+                                        <p class="font-bold underline" id="c-admin">Nama Admin</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="card-empty" class="text-center py-20 text-gray-500">Pilih mahasiswa untuk melihat kartu.</div>
+                    </div>
+                </section>
+
+                <section id="view-setting" class="hidden-section max-w-2xl mx-auto space-y-6">
+                    <div class="bg-white p-6 rounded-xl shadow-sm border">
+                        <h3 class="font-bold text-lg mb-4 text-green-800">Profil Admin & Keamanan</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div><label class="text-xs font-bold uppercase">Nama Admin (Utk Laporan)</label><input id="set-admin" class="w-full border p-2 rounded"></div>
+                            <div><label class="text-xs font-bold uppercase">Lokasi/Kota (Utk Titimangsa)</label><input id="set-city" class="w-full border p-2 rounded"></div>
+                            <div><label class="text-xs font-bold uppercase">Username Login</label><input id="set-user" class="w-full border p-2 rounded"></div>
+                            <div><label class="text-xs font-bold uppercase">Password Login</label><input id="set-pass" type="password" class="w-full border p-2 rounded"></div>
+                            <div class="md:col-span-2"><label class="text-xs font-bold uppercase">Kode Pemulihan (Lupa Sandi)</label><input id="set-code" class="w-full border p-2 rounded" placeholder="Contoh: kucing123"></div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-xl shadow-sm border">
+                        <h3 class="font-bold text-lg mb-4 text-green-800">Standar Harga (Nominal)</h3>
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between">
+                                <label>UKT Per Semester</label>
+                                <input type="number" id="set-price-ukt" class="border p-2 rounded w-40 text-right">
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <label>Biaya Heregistrasi</label>
+                                <input type="number" id="set-price-hereg" class="border p-2 rounded w-40 text-right">
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <label>Harga Modul (Estimasi)</label>
+                                <input type="number" id="set-price-modul" class="border p-2 rounded w-40 text-right">
+                            </div>
+                        </div>
+                        <div class="mt-4 text-right">
+                            <button onclick="saveSettings()" class="bg-green-600 text-white px-6 py-2 rounded font-bold">Simpan Perubahan</button>
+                        </div>
+                    </div>
+
+                    <div class="bg-blue-50 p-6 rounded-xl border border-blue-100 flex gap-4">
+                        <button onclick="backupData()" class="flex-1 bg-white border border-blue-200 text-blue-600 py-3 rounded font-bold shadow-sm hover:bg-blue-50"><i class="fa-solid fa-download"></i> Backup Data (JSON)</button>
+                        <label class="flex-1 bg-white border border-blue-200 text-blue-600 py-3 rounded font-bold shadow-sm hover:bg-blue-50 text-center cursor-pointer">
+                            <i class="fa-solid fa-upload"></i> Restore Data
+                            <input type="file" class="hidden" onchange="restoreData(this)">
+                        </label>
+                    </div>
+                </section>
+
+            </div>
+        </main>
+    </div>
+
+    <div id="modal-mhs" class="fixed inset-0 z-50 hidden bg-black/50 backdrop-blur-sm flex items-center justify-center">
+        <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-lg">
+            <h3 class="font-bold text-lg mb-4">Input Data Mahasiswa</h3>
+            <form onsubmit="saveStudent(event)" class="space-y-3">
+                <input type="hidden" id="inp-idx" value="-1">
+                <input id="inp-nim" class="w-full border p-2 rounded" placeholder="NIM" required>
+                <input id="inp-nama" class="w-full border p-2 rounded" placeholder="Nama Lengkap" required>
+                <div class="grid grid-cols-2 gap-2">
+                    <input id="inp-fakultas" class="w-full border p-2 rounded" placeholder="Fakultas" list="list-fak">
+                    <input id="inp-prodi" class="w-full border p-2 rounded" placeholder="Prodi" list="list-prodi">
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <select id="inp-bulan" class="border p-2 rounded" required>
+                        <option value="">- Bulan Masuk -</option>
+                        <option value="1">Januari</option><option value="2">Februari</option><option value="3">Maret</option>
+                        <option value="4">April</option><option value="5">Mei</option><option value="6">Juni</option>
+                        <option value="7">Juli</option><option value="8">Agustus</option><option value="9">September</option>
+                        <option value="10">Oktober</option><option value="11">November</option><option value="12">Desember</option>
+                    </select>
+                    <input type="number" id="inp-tahun" class="border p-2 rounded" placeholder="Tahun Masuk (2023)" required>
+                </div>
+                <div class="flex justify-end gap-2 mt-4">
+                    <button type="button" onclick="toggleModal('modal-mhs')" class="px-4 py-2 text-gray-500">Batal</button>
+                    <button type="submit" class="px-6 py-2 bg-green-600 text-white rounded font-bold">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <datalist id="list-fak"><option value="FE"><option value="FHISIP"><option value="FST"><option value="FKIP"></datalist>
+    <datalist id="list-prodi"><option value="Manajemen"><option value="Ilmu Hukum"><option value="PGSD"><option value="Ilmu Komunikasi"></datalist>
+
+    <script>
+        // === INITIAL STATE ===
+        const defaultApp = {
+            settings: {
+                user: 'admin', pass: '123456', recovery: 'pesantren123',
+                adminName: 'Ust. Ahmad Fauzi', city: 'Cianjur',
+                prices: { ukt: 1500000, hereg: 250000, modul: 450000 }
+            },
+            students: [],
+            payments: []
+        };
+        
+        let app = JSON.parse(localStorage.getItem('sipantren_v3')) || defaultApp;
+        let activeMhsView = 'active'; // 'active' or 'archive'
+
+        // === SYSTEM UTILS ===
+        function saveData() { localStorage.setItem('sipantren_v3', JSON.stringify(app)); }
+        function toggleModal(id) { document.getElementById(id).classList.toggle('hidden'); }
+        
+        // === AUTH ===
+        function handleLogin(e) {
+            e.preventDefault();
+            const u = document.getElementById('login-user').value;
+            const p = document.getElementById('login-pass').value;
+            if(u === app.settings.user && p === app.settings.pass) {
+                document.getElementById('login-page').classList.add('hidden-section');
+                document.getElementById('main-app').classList.remove('hidden-section');
+                initDashboard();
+                Swal.fire('Berhasil Login', `Selamat datang, ${app.settings.adminName}`, 'success');
+            } else {
+                Swal.fire('Gagal', 'Username/Password salah', 'error');
+            }
+        }
+        function forgotPassword() {
+            Swal.fire({
+                title: 'Pemulihan Akun',
+                input: 'text',
+                inputLabel: 'Masukan Kode Pemulihan',
+                showCancelButton: true
+            }).then((res) => {
+                if(res.value === app.settings.recovery) {
+                    Swal.fire('Akses Diberikan', `User: ${app.settings.user}<br>Pass: ${app.settings.pass}`, 'info');
+                } else if(res.value) {
+                    Swal.fire('Salah', 'Kode pemulihan tidak cocok.', 'error');
+                }
+            });
+        }
+        function logout() { location.reload(); }
+
+        // === DASHBOARD & REALTIME ===
+        function initDashboard() {
+            // Update Greeting & Time
+            updateClock();
+            setInterval(updateClock, 1000);
+            
+            // Set Greeting Name
+            const hr = new Date().getHours();
+            let greet = hr < 12 ? "Selamat Pagi" : hr < 15 ? "Selamat Siang" : hr < 18 ? "Selamat Sore" : "Selamat Malam";
+            document.getElementById('header-greeting').innerText = `${greet}, ${app.settings.adminName}`;
+            
+            renderMhsTable();
+            renderHistory();
+            loadSettingsForm();
+            refreshStats();
+            updateDataLists();
+        }
+
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('clock-time').innerText = now.toLocaleTimeString('id-ID');
+            document.getElementById('clock-date').innerText = now.toLocaleDateString('id-ID', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
+            
+            // Info Semester Realtime
+            const mo = now.getMonth() + 1;
+            const semPeriod = (mo >= 1 && mo <= 6) ? "GENAP (Jan-Jun)" : "GANJIL (Jul-Des)";
+            document.getElementById('dash-semester-info').innerText = `Tahun ${now.getFullYear()} - Semester ${semPeriod}`;
+        }
+
+        // === MAHASISWA & SEMESTER LOGIC ===
+        function calculateSemester(entryY, entryM) {
+            const now = new Date();
+            const curY = now.getFullYear();
+            const curM = now.getMonth() + 1;
+            
+            // Logic: 1 Semester = 6 months block.
+            // Genap = 1 (Jan-Jun), Ganjil = 2 (Jul-Dec)
+            // Example: Masuk Jan 2023. Now Jan 2024.
+            // 2023-1 (Sem 1), 2023-2 (Sem 2), 2024-1 (Sem 3).
+            
+            let sem = (curY - entryY) * 2;
+            const entryPeriod = entryM <= 6 ? 1 : 2; // 1=Genap, 2=Ganjil
+            const curPeriod = curM <= 6 ? 1 : 2;
+            
+            sem += (curPeriod - entryPeriod) + 1;
+            return Math.max(1, sem);
+        }
+
+        function setMhsView(view) {
+            activeMhsView = view;
+            document.getElementById('btn-view-active').className = view==='active' ? 'px-4 py-2 rounded bg-green-600 text-white font-bold text-sm' : 'px-4 py-2 rounded bg-gray-200 text-gray-600 font-bold text-sm';
+            document.getElementById('btn-view-archive').className = view==='archive' ? 'px-4 py-2 rounded bg-green-600 text-white font-bold text-sm' : 'px-4 py-2 rounded bg-gray-200 text-gray-600 font-bold text-sm';
+            renderMhsTable();
+        }
+
+        function renderMhsTable() {
+            const tbody = document.getElementById('table-mhs-body');
+            tbody.innerHTML = '';
+            
+            const list = app.students.filter(s => activeMhsView === 'active' ? !s.archived : s.archived);
+            
+            list.forEach(s => {
+                const sem = calculateSemester(s.entryYear, s.entryMonth);
+                const monthName = new Date(2000, s.entryMonth-1, 1).toLocaleString('id-ID', {month:'long'});
+                
+                const restoreBtn = s.archived ? `<button onclick="restoreStudent('${s.nim}')" class="text-green-600" title="Kembalikan"><i class="fa-solid fa-rotate-left"></i></button>` : '';
+                const archiveBtn = !s.archived ? `<button onclick="archiveStudent('${s.nim}')" class="text-amber-600" title="Arsipkan"><i class="fa-solid fa-box-archive"></i></button>` : '';
+                
+                tbody.innerHTML += `
+                    <tr class="hover:bg-white transition border-b">
+                        <td class="p-4 font-mono font-bold text-green-700">${s.nim}</td>
+                        <td class="p-4 font-bold text-gray-700">${s.nama}</td>
+                        <td class="p-4 text-xs">${s.fakultas} - ${s.prodi}</td>
+                        <td class="p-4 text-sm">${monthName} ${s.entryYear}</td>
+                        <td class="p-4"><span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-bold">Smt ${sem}</span></td>
+                        <td class="p-4 text-center text-lg space-x-2">
+                            <button onclick="editStudent('${s.nim}')" class="text-blue-500"><i class="fa-solid fa-pen-to-square"></i></button>
+                            ${archiveBtn} ${restoreBtn}
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function saveStudent(e) {
+            e.preventDefault();
+            const idx = parseInt(document.getElementById('inp-idx').value);
+            const nim = document.getElementById('inp-nim').value;
+            
+            const data = {
+                nim, 
+                nama: document.getElementById('inp-nama').value,
+                fakultas: document.getElementById('inp-fakultas').value,
+                prodi: document.getElementById('inp-prodi').value,
+                entryMonth: parseInt(document.getElementById('inp-bulan').value),
+                entryYear: parseInt(document.getElementById('inp-tahun').value),
+                archived: false
+            };
+
+            if(idx === -1) {
+                if(app.students.find(s => s.nim === nim)) return Swal.fire('Error', 'NIM sudah ada!', 'error');
+                app.students.push(data);
+            } else {
+                // Keep archive status if editing
+                data.archived = app.students[idx].archived;
+                app.students[idx] = data;
+            }
+            saveData();
+            toggleModal('modal-mhs');
+            renderMhsTable();
+            updateDataLists();
+            Swal.fire('Sukses', 'Data disimpan', 'success');
+        }
+
+        function editStudent(nim) {
+            const idx = app.students.findIndex(s => s.nim === nim);
+            const s = app.students[idx];
+            document.getElementById('inp-idx').value = idx;
+            document.getElementById('inp-nim').value = s.nim;
+            document.getElementById('inp-nama').value = s.nama;
+            document.getElementById('inp-fakultas').value = s.fakultas;
+            document.getElementById('inp-prodi').value = s.prodi;
+            document.getElementById('inp-bulan').value = s.entryMonth;
+            document.getElementById('inp-tahun').value = s.entryYear;
+            toggleModal('modal-mhs');
+        }
+
+        function archiveStudent(nim) {
+            if(confirm('Arsipkan mahasiswa ini?')) {
+                app.students.find(s => s.nim === nim).archived = true;
+                saveData(); renderMhsTable();
+            }
+        }
+        function restoreStudent(nim) {
+            app.students.find(s => s.nim === nim).archived = false;
+            saveData(); renderMhsTable();
+        }
+
+        // === PEMBAYARAN & TUNGGAKAN ===
+        function updateDataLists() {
+            const dl = document.getElementById('list-mhs');
+            dl.innerHTML = app.students.map(s => `<option value="${s.nim}">${s.nama}</option>`).join('');
+        }
+
+        function getStudentDebts(nim) {
+            const s = app.students.find(x => x.nim === nim);
+            if(!s) return [];
+            
+            const curSem = calculateSemester(s.entryYear, s.entryMonth);
+            const paidUKT = app.payments.filter(p => p.nim === nim && p.type === 'UKT').map(p => p.desc);
+            const paidHereg = app.payments.filter(p => p.nim === nim && p.type === 'Heregistrasi').map(p => p.desc);
+            
+            let debts = [];
+            // Cek setiap semester
+            for(let i=1; i<=curSem; i++) {
+                const smtStr = `Semester ${i}`;
+                if(!paidUKT.includes(smtStr)) {
+                    debts.push({ type: 'UKT', desc: smtStr, price: app.settings.prices.ukt });
+                }
+                if(!paidHereg.includes(smtStr)) {
+                    debts.push({ type: 'Heregistrasi', desc: smtStr, price: app.settings.prices.hereg });
+                }
+            }
+            return debts;
+        }
+
+        function checkArrears() {
+            const nim = document.getElementById('pay-nim').value;
+            // Just trigger UI update if needed, mostly used inside handlePayTypeChange
+            handlePayTypeChange(); 
+        }
+
+        function handlePayTypeChange() {
+            const type = document.getElementById('pay-type').value;
+            const amountInp = document.getElementById('pay-amount');
+            const descInp = document.getElementById('pay-desc');
+            const debtArea = document.getElementById('debt-options-area');
+            const debtList = document.getElementById('debt-list');
+            const nim = document.getElementById('pay-nim').value;
+
+            debtArea.classList.add('hidden');
+            amountInp.readOnly = false;
+            descInp.readOnly = false;
+            amountInp.value = '';
+            descInp.value = '';
+
+            if(type === 'Tunggakan') {
+                if(!nim) return Swal.fire('Info', 'Isi NIM dulu', 'warning');
+                const debts = getStudentDebts(nim);
+                
+                if(debts.length === 0) {
+                    Swal.fire('Bersih', 'Mahasiswa ini tidak punya tunggakan!', 'success');
+                    document.getElementById('pay-type').value = "";
+                    return;
+                }
+
+                debtArea.classList.remove('hidden');
+                debtList.innerHTML = debts.map((d, i) => `
+                    <div class="flex justify-between items-center bg-white p-2 border rounded cursor-pointer hover:bg-green-50" 
+                         onclick="selectDebt('${d.type}', '${d.desc}', ${d.price})">
+                        <span><b>${d.type}</b> - ${d.desc}</span>
+                        <span class="font-mono text-green-700">Rp ${d.price.toLocaleString()}</span>
+                    </div>
+                `).join('');
+                
+                amountInp.readOnly = true;
+                descInp.readOnly = true;
+            } 
+            else if(type === 'UKT') { amountInp.value = app.settings.prices.ukt; }
+            else if(type === 'Heregistrasi') { amountInp.value = app.settings.prices.hereg; }
+            else if(type === 'Modul') { amountInp.value = app.settings.prices.modul; }
+        }
+
+        function selectDebt(type, desc, price) {
+            // Override form values based on selection
+            document.getElementById('pay-type').value = type; // Temporarily visual, logic will follow
+            // Actually we need to keep type as what it is in data, 
+            // but UI dropdown might be confused. Let's fix processPayment logic.
+            // Simplified: User clicks debt, we fill the manual form for them
+            document.getElementById('pay-type').value = type;
+            document.getElementById('pay-desc').value = desc;
+            document.getElementById('pay-amount').value = price;
+            document.getElementById('debt-options-area').classList.add('hidden');
+        }
+
+        function processPayment(e) {
+            e.preventDefault();
+            const nim = document.getElementById('pay-nim').value;
+            if(!app.students.find(s => s.nim === nim)) return Swal.fire('Error', 'Mahasiswa tidak ditemukan', 'error');
+
+            app.payments.unshift({
+                date: document.getElementById('pay-date').value,
+                nim: nim,
+                type: document.getElementById('pay-type').value,
+                desc: document.getElementById('pay-desc').value,
+                amount: parseInt(document.getElementById('pay-amount').value)
+            });
+            saveData();
+            refreshStats();
+            renderHistory();
+            e.target.reset();
+            Swal.fire('Berhasil', 'Pembayaran tersimpan', 'success');
+        }
+
+        function renderHistory() {
+            const tbody = document.getElementById('history-body');
+            tbody.innerHTML = app.payments.slice(0, 20).map(p => {
+                const s = app.students.find(x => x.nim === p.nim);
+                return `<tr class="border-b">
+                    <td class="p-3 text-gray-500">${p.date}</td>
+                    <td class="p-3 font-bold">${s ? s.nama : p.nim}</td>
+                    <td class="p-3"><span class="bg-gray-100 rounded px-1 text-xs font-bold">${p.type}</span> ${p.desc}</td>
+                    <td class="p-3 text-right">Rp ${p.amount.toLocaleString()}</td>
+                    <td class="p-3 text-center"><i class="fa-solid fa-check text-green-500"></i></td>
+                </tr>`;
+            }).join('');
+        }
+
+        // === KARTU & LAPORAN ===
+        function renderCard() {
+            const nim = document.getElementById('report-nim').value;
+            const s = app.students.find(x => x.nim === nim);
+            const view = document.getElementById('card-preview');
+            const empty = document.getElementById('card-empty');
+
+            if(!s) { view.classList.add('hidden'); empty.classList.remove('hidden'); return; }
+
+            view.classList.remove('hidden'); empty.classList.add('hidden');
+            
+            document.getElementById('c-nama').innerText = ": " + s.nama;
+            document.getElementById('c-nim').innerText = ": " + s.nim;
+            document.getElementById('c-prodi').innerText = ": " + s.fakultas + " - " + s.prodi;
+            const curSem = calculateSemester(s.entryYear, s.entryMonth);
+            document.getElementById('c-smt').innerText = ": " + curSem;
+            
+            document.getElementById('c-footer-mhs').innerText = s.nama;
+            document.getElementById('c-admin').innerText = app.settings.adminName;
+            document.getElementById('c-city').innerText = app.settings.city;
+            document.getElementById('c-date').innerText = new Date().toLocaleDateString('id-ID', {day:'numeric', month:'long', year:'numeric'});
+
+            // Arrears Table
+            const debts = getStudentDebts(nim);
+            const tbody = document.getElementById('c-tbody-arrears');
+            let total = 0;
+            
+            if(debts.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="3" class="p-4 text-center text-green-700 font-bold bg-green-50">ALHAMDULILLAH LUNAS SEMUA</td></tr>`;
+            } else {
+                tbody.innerHTML = debts.map(d => {
+                    total += d.price;
+                    return `<tr>
+                        <td class="border p-2">${d.type} - ${d.desc}</td>
+                        <td class="border p-2 text-center text-red-600 font-bold">BELUM BAYAR</td>
+                        <td class="border p-2 text-right">Rp ${d.price.toLocaleString()}</td>
+                    </tr>`;
+                }).join('');
+            }
+            document.getElementById('c-total').innerText = "Rp " + total.toLocaleString();
+        }
+
+        function downloadPDF() {
+            const el = document.getElementById('card-preview');
+            html2pdf().set({ margin: 0, filename: 'KARTU_SIPANTREN.pdf', html2canvas: { scale: 2 }, jsPDF: { unit: 'mm', format: 'a4' } }).from(el).save();
+        }
+
+        // === PENGATURAN ===
+        function loadSettingsForm() {
+            const s = app.settings;
+            document.getElementById('set-admin').value = s.adminName;
+            document.getElementById('set-city').value = s.city;
+            document.getElementById('set-user').value = s.user;
+            document.getElementById('set-pass').value = s.pass;
+            document.getElementById('set-code').value = s.recovery;
+            document.getElementById('set-price-ukt').value = s.prices.ukt;
+            document.getElementById('set-price-hereg').value = s.prices.hereg;
+            document.getElementById('set-price-modul').value = s.prices.modul;
+        }
+
+        function saveSettings() {
+            app.settings = {
+                adminName: document.getElementById('set-admin').value,
+                city: document.getElementById('set-city').value,
+                user: document.getElementById('set-user').value,
+                pass: document.getElementById('set-pass').value,
+                recovery: document.getElementById('set-code').value,
+                prices: {
+                    ukt: parseInt(document.getElementById('set-price-ukt').value),
+                    hereg: parseInt(document.getElementById('set-price-hereg').value),
+                    modul: parseInt(document.getElementById('set-price-modul').value)
+                }
+            };
+            saveData();
+            initDashboard(); // Refresh greetings etc
+            Swal.fire('Tersimpan', 'Pengaturan diperbarui', 'success');
+        }
+
+        function backupData() {
+            const blob = new Blob([JSON.stringify(app)], {type: 'application/json'});
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `BACKUP_SIPANTREN_${new Date().toISOString().slice(0,10)}.json`;
+            a.click();
+        }
+
+        function restoreData(input) {
+            const fr = new FileReader();
+            fr.onload = (e) => {
+                try {
+                    app = JSON.parse(e.target.result);
+                    saveData();
+                    location.reload();
+                } catch(err) { Swal.fire('Error', 'File rusak', 'error'); }
+            };
+            fr.readAsText(input.files[0]);
+        }
+
+        function refreshStats() {
+            const today = new Date().toISOString().slice(0,10);
+            document.getElementById('dash-mhs').innerText = app.students.filter(s=>!s.archived).length;
+            document.getElementById('dash-income').innerText = "Rp " + app.payments.filter(p=>p.date === today).reduce((a,b)=>a+b.amount,0).toLocaleString();
+            
+            // Count Debtors
+            let debtCount = 0;
+            app.students.filter(s=>!s.archived).forEach(s => {
+                if(getStudentDebts(s.nim).length > 0) debtCount++;
+            });
+            document.getElementById('dash-debt').innerText = debtCount;
+        }
+        
+        function nav(id) {
+            document.querySelectorAll('section[id^="view"]').forEach(el => el.classList.add('hidden-section'));
+            document.getElementById('view-'+id).classList.remove('hidden-section');
+            document.getElementById('page-title').innerText = id.charAt(0).toUpperCase() + id.slice(1);
+        }
+    </script>
+</body>
+</html>
